@@ -113,8 +113,10 @@ Sepolia Testnet:
 
 `0xd7c8A9366Bd849990be3Fb42f49B4ff3A0D49518`
 
-You can view the contract on **Etherscan**.\
-可以在 **Etherscan** 上查看智能合約。
+View the contract on **Etherscan**.\
+在 **Etherscan** 上查看智能合約。
+
+https://sepolia.etherscan.io/address/0xd7c8A9366Bd849990be3Fb42f49B4ff3A0D49518
 
 ------------------------------------------------------------------------
 
