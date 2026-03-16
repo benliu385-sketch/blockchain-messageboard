@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blockchain Message Board</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .card {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      box-sizing: border-box;
+    }
+
+    .status {
+      margin-top: 10px;
+      color: #444;
+    }
+
+    .message-box {
+      background: #f7f7f7;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+      min-height: 24px;
+    }
+
+    .small {
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Blockchain Message Board</h1>
+  <p>A simple decentralized message board on Ethereum Sepolia.</p>
+
+  <div class="card">
+    <button id="connectButton">Connect MetaMask</button>
+    <p class="small">Wallet: <span id="walletAddress">Not connected</span></p>
+    <p class="small">Network: <span id="networkName">Unknown</span></p>
+    <p class="status" id="status">Please connect your wallet.</p>
+  </div>
+
+  <div class="card">
+    <h2>Current Message</h2>
+    <div class="message-box" id="currentMessage">Not loaded yet</div>
+    <button id="refreshButton">Refresh Message</button>
+  </div>
+
+  <div class="card">
+    <h2>Update Message</h2>
+    <input type="text" id="newMessage" placeholder="Enter a new message" />
+    <button id="updateButton">Send Transaction</button>
+  </div>
+
+  <script>
+    // 1. Replace with your deployed Sepolia contract address
+    const contractAddress = "0xd7c8A9366Bd849990be3Fb42f49B4ff3A0D49518";
+
+    // 2. Minimal ABI for your MessageBoard contract
+    const contractABI = [
+      "function message() view returns (string)",
+      "function getMessage() view returns (string)",
+      "function setMessage(string memory _msg)",
+      "function owner() view returns (address)"
+    ];
+
+    let provider;
+    let signer;
+    let contract;
+
+    const connectButton = document.getElementById("connectButton");
+    const refreshButton = document.getElementById("refreshButton");
+    const updateButton = document.getElementById("updateButton");
+
+    const walletAddressEl = document.getElementById("walletAddress");
+    const networkNameEl = document.getElementById("networkName");
+    const currentMessageEl = document.getElementById("currentMessage");
+    const statusEl = document.getElementById("status");
+    const newMessageEl = document.getElementById("newMessage");
+
+    async function connectWallet() {
+      if (!window.ethereum) {
+        statusEl.innerText = "MetaMask is not installed.";
+        return;
+      }
+
+      try {
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+
+        const userAddress = await signer.getAddress();
+        const network = await provider.getNetwork();
+
+        walletAddressEl.innerText = userAddress;
+        networkNameEl.innerText = `${network.name} (chainId: ${network.chainId})`;
+
+        if (network.chainId !== 11155111) {
+          statusEl.innerText = "Please switch MetaMask to Sepolia.";
+          contract = null;
+          return;
+        }
+
+        contract = new ethers.Contract(contractAddress, contractABI, signer);
+        statusEl.innerText = "Wallet connected successfully.";
+
+        await loadMessage();
+      } catch (error) {
+        console.error(error);
+        statusEl.innerText = "Failed to connect wallet.";
+      }
+    }
+
+    async function loadMessage() {
+      if (!contract) {
+        statusEl.innerText = "Contract not ready. Connect wallet first.";
+        return;
+      }
+
+      try {
+        statusEl.innerText = "Loading message...";
+        const msg = await contract.getMessage();
+        currentMessageEl.innerText = msg;
+        statusEl.innerText = "Message loaded.";
+      } catch (error) {
+        console.error(error);
+        statusEl.innerText = "Failed to load message.";
+      }
+    }
+
+    async function updateMessage() {
+      if (!contract) {
+        statusEl.innerText = "Contract not ready. Connect wallet first.";
+        return;
+      }
+
+      const newMsg = newMessageEl.value.trim();
+
+      if (!newMsg) {
+        statusEl.innerText = "Please enter a message first.";
+        return;
+      }
+
+      try {
+        statusEl.innerText = "Sending transaction... Please confirm in MetaMask.";
+        const tx = await contract.setMessage(newMsg);
+        statusEl.innerText = `Transaction sent: ${tx.hash}`;
+
+        await tx.wait();
+
+        statusEl.innerText = "Transaction confirmed.";
+        newMessageEl.value = "";
+        await loadMessage();
+      } catch (error) {
+        console.error(error);
+        statusEl.innerText = "Transaction failed or was rejected.";
+      }
+    }
+
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", () => {
+        location.reload();
+      });
+
+      window.ethereum.on("chainChanged", () => {
+        location.reload();
+      });
+    }
+
+    connectButton.addEventListener("click", connectWallet);
+    refreshButton.addEventListener("click", loadMessage);
+    updateButton.addEventListener("click", updateMessage);
+  </script>
+</body>
+</html>
+
