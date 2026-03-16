@@ -17,7 +17,7 @@
 
 Try the live decentralized application:
 
-https://benliu335-sketch.github.io/blockchain-messageboard
+https://benliu385-sketch.github.io/blockchain-messageboard
 
 (You can also open `index.html` directly in this repository.)
 
@@ -35,7 +35,7 @@ https://sepolia.etherscan.io/address/0xd7c8A9366Bd849990be3Fb42f49B4ff3A0D49518
 
 Detailed explanation of the project:
 
-[technical_report.pdf](https://benliu335-sketch.github.io/blockchain-messageboard/report/technical_report.pdf)
+[technical_report.pdf](https://benliu385-sketch.github.io/blockchain-messageboard/report/technical_report.pdf)
 
 ---
 
