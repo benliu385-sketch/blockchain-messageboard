@@ -1,224 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Blockchain Message Board</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blockchain Message Board</title>
 
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
-<style>
-body{
-font-family:Arial;
-max-width:700px;
-margin:auto;
-padding:30px;
-}
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
 
-.card{
-border:1px solid #ccc;
-border-radius:10px;
-padding:20px;
-margin-top:20px;
-}
+    h1 {
+      margin-bottom: 10px;
+    }
 
-button{
-padding:10px 15px;
-margin-top:10px;
-cursor:pointer;
-}
+    .card {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+    }
 
-input{
-width:100%;
-padding:10px;
-margin-top:10px;
-}
+    button {
+      padding: 10px 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
 
-.message{
-background:#f5f5f5;
-padding:10px;
-border-radius:6px;
-margin-top:10px;
-}
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      box-sizing: border-box;
+    }
 
-.status{
-margin-top:10px;
-color:#444;
-}
-</style>
+    .status {
+      margin-top: 10px;
+      color: #444;
+      word-break: break-word;
+    }
 
+    .message-box {
+      background: #f7f7f7;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+      min-height: 24px;
+      word-break: break-word;
+    }
+
+    .small {
+      font-size: 14px;
+      color: #666;
+      word-break: break-word;
+    }
+
+    .link-row {
+      margin-top: 10px;
+    }
+
+    a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
-
 <body>
-
-<h1>Blockchain Message Board</h1>
-<p>A simple decentralized message board on Ethereum Sepolia.</p>
-
-<div class="card">
-
-<button onclick="connectWallet()">Connect MetaMask</button>
-
-<p>Wallet: <span id="wallet">Not connected</span></p>
-
-<p>Network: <span id="network">Unknown</span></p>
-
-<p class="status" id="status">Please connect wallet.</p>
-
-</div>
-
-
-<div class="card">
-
-<h3>Current Message</h3>
-
-<div class="message" id="message">Not loaded</div>
-
-<button onclick="loadMessage()">Refresh Message</button>
-
-</div>
-
-
-<div class="card">
-
-<h3>Update Message</h3>
-
-<input id="newMessage" placeholder="Enter new message">
-
-<button onclick="setMessage()">Send Transaction</button>
-
-</div>
-
-
-<script>
-
-const contractAddress = "0xd7c8A9366Bd849990be3Fb42f49B4ff3A0D49518";
-
-const abi = [
-"function message() view returns (string)",
-"function getMessage() view returns (string)",
-"function setMessage(string memory _msg)"
-];
-
-let provider;
-let signer;
-let contract;
-
-async function connectWallet(){
-
-if(!window.ethereum){
-
-document.getElementById("status").innerText="MetaMask not installed";
-
-return;
-}
-
-try{
-
-provider=new ethers.providers.Web3Provider(window.ethereum);
-
-await provider.send("eth_requestAccounts",[]);
-
-signer=provider.getSigner();
-
-let address=await signer.getAddress();
-
-document.getElementById("wallet").innerText=address;
-
-let network=await provider.getNetwork();
-
-document.getElementById("network").innerText=network.name+" ("+network.chainId+")";
-
-if(network.chainId!==11155111){
-
-document.getElementById("status").innerText="Please switch MetaMask to Sepolia";
-
-return;
-}
-
-contract=new ethers.Contract(contractAddress,abi,signer);
-
-document.getElementById("status").innerText="Wallet connected";
-
-loadMessage();
-
-}catch(err){
-
-console.log(err);
-
-document.getElementById("status").innerText="Failed to connect wallet";
-
-}
-
-}
-
-async function loadMessage(){
-
-if(!contract){
-
-document.getElementById("status").innerText="Connect wallet first";
-
-return;
-}
-
-try{
-
-let msg=await contract.getMessage();
-
-document.getElementById("message").innerText=msg;
-
-}catch(err){
-
-console.log(err);
-
-document.getElementById("status").innerText="Cannot read message";
-
-}
-
-}
-
-async function setMessage(){
-
-if(!contract){
-
-document.getElementById("status").innerText="Connect wallet first";
-
-return;
-}
-
-let newMsg=document.getElementById("newMessage").value;
-
-if(newMsg===""){
-
-document.getElementById("status").innerText="Enter a message";
-
-return;
-}
-
-try{
-
-document.getElementById("status").innerText="Confirm transaction in MetaMask";
-
-let tx=await contract.setMessage(newMsg);
-
-document.getElementById("status").innerText="Transaction sent";
-
-await tx.wait();
-
-document.getElementById("status").innerText="Transaction confirmed";
-
-loadMessage();
-
-}catch(err){
-
-console.log(err);
-
-document.getElementById("status").innerText="Transaction failed";
-
-}
-
-}
-
-</script>
-
+  <h1>Blockchain Message Board</h1>
+  <p>A simple decentralized message board on Ethereum Sepolia.</p>
+
+  <div class="card">
+    <button id="connectButton">Connect MetaMask</button>
+    <p class="small">Wallet: <span id="walletAddress">Not connected</span></p>
+    <p class="small">Network: <span id="networkName">Unknown</span></p>
+    <p class="small">Contract: <span id="contractAddressText">Not set</span></p>
+    <div class="link-row">
+      <a id="etherscanLink" href="#" target="_blank" rel="noopener noreferrer">View contract on Etherscan</a>
+    </div>
+    <p class="status" id="status">Please connect your wallet.</p>
+  </div>
+
+  <div class="card">
+    <h2>Current Message</h2>
+    <div class="message-box" id="currentMessage">Not loaded yet</div>
+    <button id="refreshButton">Refresh Message</button>
+  </div>
+
+  <div class="card">
+    <h2>Update Message</h2>
+    <input type="text" id="newMessage" placeholder="Enter a new message" />
+    <button id="updateButton">Send Transaction</button>
+    <p class="small">Latest Tx: <span id="latestTx">None</span></p>
+  </div>
+
+  <script>
+    // Replace this with your deployed Sepolia contract address
+    const contractAddress = "0xd7c8A9366Bd849990be3Fb42f49B4ff3A0D49518";
+
+    const contractABI = [
+      "function message() view returns (string)",
+      "function getMessage() view returns (string)",
+      "function setMessage(string memory _msg)",
+      "function owner() view returns (address)"
+    ];
+
+    let provider;
+    let signer;
+    let contract;
+    let injectedProvider = null;
+
+    const connectButton = document.getElementById("connectButton");
+    const refreshButton = document.getElementById("refreshButton");
+    const updateButton = document.getElementById("updateButton");
+
+    const walletAddressEl = document.getElementById("walletAddress");
+    const networkNameEl = document.getElementById("networkName");
+    const contractAddressTextEl = document.getElementById("contractAddressText");
+    const etherscanLinkEl = document.getElementById("etherscanLink");
+    const currentMessageEl = document.getElementById("currentMessage");
+    const statusEl = document.getElementById("status");
+    const newMessageEl = document.getElementById("newMessage");
+    const latestTxEl = document.getElementById("latestTx");
+
+    contractAddressTextEl.innerText = contractAddress;
+    etherscanLinkEl.href = contractAddress.startsWith("0x")
+      ? `https://sepolia.etherscan.io/address/${contractAddress}`
+      : "#";
+
+    function shortAddress(addr) {
+      if (!addr || addr.length < 10) return addr;
+      return addr.slice(0, 6) + "..." + addr.slice(-4);
+    }
+
+    function setStatus(message) {
+      statusEl.innerText = message;
+    }
+
+    // EIP-6963 wallet discovery
+    window.addEventListener("eip6963:announceProvider", (event) => {
+      const info = event.detail.info;
+      const provider = event.detail.provider;
+
+      if (info && info.rdns === "io.metamask") {
+        injectedProvider = provider;
+        console.log("MetaMask provider discovered via EIP-6963.");
+      }
+    });
+
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+
+    async function connectWallet() {
+      try {
+        const rawProvider = injectedProvider || window.ethereum;
+
+        if (!rawProvider) {
+          setStatus("No wallet provider found. Check MetaMask, disable other wallets, then reload.");
+          return;
+        }
+
+        provider = new ethers.providers.Web3Provider(rawProvider);
+
+        await rawProvider.request({ method: "eth_requestAccounts" });
+
+        signer = provider.getSigner();
+
+        const userAddress = await signer.getAddress();
+        const network = await provider.getNetwork();
+
+        walletAddressEl.innerText = userAddress;
+        networkNameEl.innerText = `${network.name} (chainId: ${network.chainId})`;
+
+        if (network.chainId !== 11155111) {
+          contract = null;
+          setStatus("Please switch MetaMask to Sepolia.");
+          return;
+        }
+
+        if (!contractAddress || !contractAddress.startsWith("0x")) {
+          contract = null;
+          setStatus("Please set a valid Sepolia contract address in index.html.");
+          return;
+        }
+
+        contract = new ethers.Contract(contractAddress, contractABI, signer);
+        setStatus("Wallet connected successfully.");
+
+        await loadMessage();
+      } catch (error) {
+        console.error("Connect error:", error);
+        setStatus("Connect failed: " + (error.message || error));
+      }
+    }
+
+    async function loadMessage() {
+      if (!contract) {
+        setStatus("Contract not ready. Connect wallet first.");
+        return;
+      }
+
+      try {
+        setStatus("Loading message...");
+        const msg = await contract.getMessage();
+        currentMessageEl.innerText = msg;
+        setStatus("Message loaded.");
+      } catch (error) {
+        console.error("Load message error:", error);
+        setStatus("Failed to load message: " + (error.message || error));
+      }
+    }
+
+    async function updateMessage() {
+      if (!contract) {
+        setStatus("Contract not ready. Connect wallet first.");
+        return;
+      }
+
+      const newMsg = newMessageEl.value.trim();
+
+      if (!newMsg) {
+        setStatus("Please enter a message first.");
+        return;
+      }
+
+      try {
+        setStatus("Sending transaction... Please confirm in MetaMask.");
+        const tx = await contract.setMessage(newMsg);
+
+        latestTxEl.innerHTML = `<a href="https://sepolia.etherscan.io/tx/${tx.hash}" target="_blank" rel="noopener noreferrer">${shortAddress(tx.hash)}</a>`;
+        setStatus("Transaction sent. Waiting for confirmation...");
+
+        await tx.wait();
+
+        setStatus("Transaction confirmed.");
+        newMessageEl.value = "";
+        await loadMessage();
+      } catch (error) {
+        console.error("Update message error:", error);
+        setStatus("Transaction failed: " + (error.message || error));
+      }
+    }
+
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", () => {
+        location.reload();
+      });
+
+      window.ethereum.on("chainChanged", () => {
+        location.reload();
+      });
+    }
+
+    connectButton.addEventListener("click", connectWallet);
+    refreshButton.addEventListener("click", loadMessage);
+    updateButton.addEventListener("click", updateMessage);
+  </script>
 </body>
-
 </html>
