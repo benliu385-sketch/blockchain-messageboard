@@ -120,7 +120,7 @@ You can view the contract on **Etherscan**.\
 
 # How to Run the Project
 
-# 專題重現步驟
+# 專題實現步驟
 
 ## Step 1
 
@@ -223,6 +223,10 @@ Functions supported:
 ### 寫入訊息
 
 ![setMessage](images/setMessage.png)
+
+### 交易佇列
+
+![setMessage](images/transcation.png)
 
 ### Read Message
 
