@@ -10,7 +10,7 @@ contract MessageBoard {
 
     constructor() {
         owner = msg.sender;
-        message = "Hello Blockchain"; 
+        message = "Hello NTUT"; 
     }
 
     function setMessage(string memory _msg) public {
